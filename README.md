@@ -1,4 +1,4 @@
-# Hadoop Exporter for Prometheus
+# Chef Exporter for Prometheus
 Exports hadoop metrics via HTTP for Prometheus consumption.
 
 How to build
