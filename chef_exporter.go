@@ -6,24 +6,25 @@ import (
         "fmt"
         "strings"
         "net/http"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/log"
+        "github.com/prometheus/client_golang/prometheus"
+        "github.com/prometheus/log"
         "github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
-	namespace = "chef"
+        namespace = "chef"
 )
 
 var (
-	listenAddress  = flag.String("web.listen-address", ":9070", "Address on which to expose metrics and web interface.")
-	metricsPath    = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
+        listenAddress  = flag.String("web.listen-address", ":9070", "Address on which to expose metrics and web interface.")
+        metricsPath    = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
 )
 
 type Exporter struct {
-	ManageRedisStatus           prometheus.Gauge
-	ManageWebStatus             prometheus.Gauge
-	ManageWorkerStatus          prometheus.Gauge
+        ManageEventStatus           prometheus.Gauge
+        ManageRedisStatus           prometheus.Gauge
+        ManageWebStatus             prometheus.Gauge
+        ManageWorkerStatus          prometheus.Gauge
         ServerBookshelfStatus           prometheus.Gauge
         ServerEcsyncStatus             prometheus.Gauge
         ServerNginxStatus          prometheus.Gauge
@@ -38,22 +39,27 @@ type Exporter struct {
 }
 
 func NewExporter() *Exporter {
-	return &Exporter{
-		ManageRedisStatus: prometheus.NewGauge(prometheus.GaugeOpts{
-			Namespace: namespace,
-			Name:      "ManageRedisStatus",
-			Help:      "ManageRedisStatus",
-		}),
-		ManageWebStatus: prometheus.NewGauge(prometheus.GaugeOpts{
-			Namespace: namespace,
-			Name:      "ManageWebStatus",
-			Help:      "ManageWebStatus",
-		}),
-		ManageWorkerStatus: prometheus.NewGauge(prometheus.GaugeOpts{
-			Namespace: namespace,
-			Name:      "ManageWorkerStatus",
-			Help:      "ManageWorkerStatus",
-		}),
+        return &Exporter{
+                ManageEventStatus: prometheus.NewGauge(prometheus.GaugeOpts{
+                        Namespace: namespace,
+                        Name:      "ManageEventStatus",
+                        Help:      "ManageEventStatus",
+                }),
+                ManageRedisStatus: prometheus.NewGauge(prometheus.GaugeOpts{
+                        Namespace: namespace,
+                        Name:      "ManageRedisStatus",
+                        Help:      "ManageRedisStatus",
+                }),
+                ManageWebStatus: prometheus.NewGauge(prometheus.GaugeOpts{
+                        Namespace: namespace,
+                        Name:      "ManageWebStatus",
+                        Help:      "ManageWebStatus",
+                }),
+                ManageWorkerStatus: prometheus.NewGauge(prometheus.GaugeOpts{
+                        Namespace: namespace,
+                        Name:      "ManageWorkerStatus",
+                        Help:      "ManageWorkerStatus",
+                }),
                 ServerBookshelfStatus: prometheus.NewGauge(prometheus.GaugeOpts{
                         Namespace: namespace,
                         Name:      "ServerBookshelfStatus",
@@ -110,14 +116,15 @@ func NewExporter() *Exporter {
                         Help:      "ServerRedisStatus",
                 }),
 
-	}
+        }
 }
 
 // Describe implements the prometheus.Collector interface.
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
-	e.ManageRedisStatus.Describe(ch)
-	e.ManageWebStatus.Describe(ch)
-	e.ManageWorkerStatus.Describe(ch)
+        e.ManageEventStatus.Describe(ch)
+        e.ManageRedisStatus.Describe(ch)
+        e.ManageWebStatus.Describe(ch)
+        e.ManageWorkerStatus.Describe(ch)
         e.ServerBookshelfStatus.Describe(ch)
         e.ServerEcsyncStatus.Describe(ch)
         e.ServerNginxStatus.Describe(ch)
@@ -144,11 +151,16 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
           t := strings.Split(s," ")
           m[t[1]]=t[0]
         }
-	if m["redis:"] == "run:" {
-	   e.ManageRedisStatus.Set(1)
-	} else {
-	   e.ManageRedisStatus.Set(0)
-	}
+         if m["events:"] == "run:" {
+           e.ManageEventStatus.Set(1)
+        } else {
+           e.ManageEventStatus.Set(0)
+        }
+        if m["redis:"] == "run:" {
+           e.ManageRedisStatus.Set(1)
+        } else {
+           e.ManageRedisStatus.Set(0)
+        }
         if m["web:"] == "run:" {
            e.ManageWebStatus.Set(1)
         } else {
@@ -174,7 +186,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
         } else {
            e.ServerNginxStatus.Set(0)
         }
-	if m["oc_bifrost:"] == "run:" {
+        if m["oc_bifrost:"] == "run:" {
            e.ServerOcbifrostStatus.Set(1)
         } else {
            e.ServerOcbifrostStatus.Set(0)
@@ -189,7 +201,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
         } else {
            e.ServerErchefStatus.Set(0)
         }
-	if m["opscode-expander:"] == "run:" {
+        if m["opscode-expander:"] == "run:" {
            e.ServerExpanderStatus.Set(1)
         } else {
            e.ServerExpanderStatus.Set(0)
@@ -204,7 +216,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
         } else {
            e.ServerPostgresrStatus.Set(0)
         }
-	if m["rabbitmq:"] == "run:" {
+        if m["rabbitmq:"] == "run:" {
            e.ServerRabbitmqStatus.Set(1)
         } else {
            e.ServerRabbitmqStatus.Set(0)
@@ -214,10 +226,10 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
         } else {
            e.ServerRedisStatus.Set(0)
         }
-	
+        e.ManageEventStatus.Collect(ch)
         e.ManageRedisStatus.Collect(ch)
-	e.ManageWebStatus.Collect(ch)
-	e.ManageWorkerStatus.Collect(ch)
+        e.ManageWebStatus.Collect(ch)
+        e.ManageWorkerStatus.Collect(ch)
         e.ServerBookshelfStatus.Collect(ch)
         e.ServerEcsyncStatus.Collect(ch)
         e.ServerNginxStatus.Collect(ch)
@@ -243,22 +255,22 @@ func execute(cmd string)(s string) {
 
 func main() {
         flag.Parse()
-	exporter := NewExporter()
-	prometheus.MustRegister(exporter)
+        exporter := NewExporter()
+        prometheus.MustRegister(exporter)
 
-	log.Printf("Starting Server: %s", *listenAddress)
-	http.Handle(*metricsPath, promhttp.Handler())
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`<html>
-		<head><title>Chef Exporter</title></head>
-		<body>
-		<h1>Chef
-		<p><a href="` + *metricsPath + `">Metrics</a></p>
-		</body>
-		</html>`))
-	})
-	err := http.ListenAndServe(*listenAddress, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+        log.Printf("Starting Server: %s", *listenAddress)
+        http.Handle(*metricsPath, promhttp.Handler())
+        http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+                w.Write([]byte(`<html>
+                <head><title>Chef Exporter</title></head>
+                <body>
+                <h1>Chef
+                <p><a href="` + *metricsPath + `">Metrics</a></p>
+                </body>
+                </html>`))
+        })
+        err := http.ListenAndServe(*listenAddress, nil)
+        if err != nil {
+                log.Fatal(err)
+        }
 }
